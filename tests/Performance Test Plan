@@ -1,0 +1,49 @@
+Demowebshop Performance Test Plan
+
+1. Test Scope:
+   We will focus on the **purchase process** (browse products → add to cart → checkout → payment) since it is a critical business flow and stresses the server more than just browsing.
+
+2. Test Approach:
+
+* **Test Type:** Load Test
+* **Objective:** Measure website performance under high user load and identify bottlenecks in the purchase flow.
+* **Test Scenario Steps:**
+
+  1. Open homepage
+  2. Navigate to a product category (e.g., Books or Electronics)
+  3. Select a product
+  4. Add product to cart
+  5. Go to cart and proceed to checkout
+  6. Enter fake delivery and payment details
+  7. Confirm the order
+* **JMeter Approach:** Use JMeter's **recording functionality** to capture the manually performed scenario and generate an automated test script.
+
+3. Test Parameters:
+
+* **Number of Users (Threads):** 50–200
+* **Ramp-Up Period:** 1–5 minutes
+* **Loop Count:** 2–5 iterations per user
+* **Timers:** Random timer of 1–3 seconds between requests to simulate real behavior
+* **Assertions:**
+
+  * HTTP Response Code = 200
+  * Confirmation message appears on order page
+
+4. Metrics to Collect:
+
+* Response Time (average, min, max)
+* Throughput (requests per second)
+* Error Rate
+* Server CPU/Memory usage (if monitoring available)
+
+5. JMeter Test Plan Structure (textual representation):
+
+* Test Plan
+
+  * Thread Group (Users, Ramp-Up, Loop Count)
+
+    * HTTP Request Defaults (base URL: [https://demowebshop.tricentis.com](https://demowebshop.tricentis.com))
+    * HTTP Requests for each step in the scenario
+    * Timers (Random Timer)
+    * Assertions (Response code, text check)
+    * Listeners (View Results in Table, Aggregate Report)

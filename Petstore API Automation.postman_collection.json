@@ -1,0 +1,553 @@
+{
+	"info": {
+		"_postman_id": "138dc11b-1e74-4e5a-b5ce-6ad2dcff1fcd",
+		"name": "Petstore API Automation",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "14570977"
+	},
+	"item": [
+		{
+			"name": "Create Pet",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));\r",
+							"\r",
+							"let json = pm.response.json();\r",
+							"\r",
+							"// Basic fields\r",
+							"pm.test(\"Response has id\", () => pm.expect(json.id).to.be.a(\"number\"));\r",
+							"pm.test(\"Name is correct\", () => pm.expect(json.name).to.eql(\"Luna\"));\r",
+							"pm.test(\"Status is available\", () => pm.expect(json.status).to.eql(\"available\"));\r",
+							"\r",
+							"// Data quality\r",
+							"pm.test(\"Id is positive\", () => pm.expect(json.id).to.be.above(0));\r",
+							"pm.test(\"Name is not empty\", () => pm.expect(json.name.length).to.be.above(0));\r",
+							"pm.test(\"Status is string\", () => pm.expect(json.status).to.be.a(\"string\"));\r",
+							"\r",
+							"// Save id\r",
+							"if (json.id < 9000000000000000000) {\r",
+							"    pm.environment.set(\"petId\", json.id);\r",
+							"} else {\r",
+							"    pm.environment.set(\"petId\", Math.floor(Math.random() * 1000000) + 1);\r",
+							"}\r",
+							"\r",
+							"const schema = {\r",
+							"  type: \"object\",\r",
+							"  required: [\"id\", \"name\", \"status\"],\r",
+							"  properties: {\r",
+							"    id: { type: \"number\" },\r",
+							"    name: { type: \"string\" },\r",
+							"    status: { type: \"string\" }\r",
+							"  }\r",
+							"};\r",
+							"\r",
+							"pm.test(\"Schema is valid\", () => {\r",
+							"  pm.response.to.have.jsonSchema(schema);\r",
+							"});\r",
+							"\r",
+							"pm.execution.setNextRequest(\"Get Created Pet\");\r",
+							"\r",
+							"\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"id\": 12345,\r\n  \"name\": \"Luna\",\r\n  \"status\": \"available\"\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/pet",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"pet"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Pet - Negative",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let json = pm.response.json();\r",
+							"\r",
+							"pm.test(\"Negative test: POST without pet name\", () => {\r",
+							"    if (json && Object.keys(json).length > 0) {\r",
+							"        pm.expect.fail(\"Pet was created despite missing required field 'name'\");\r",
+							"    }\r",
+							"});\r",
+							"\r",
+							"pm.execution.setNextRequest(\"Get Pet - Negative\");\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"id\": 0,\r\n  \"status\": \"available\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/pet",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"pet"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Pet by Status",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let json = pm.response.json();\r",
+							"\r",
+							"pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));\r",
+							"\r",
+							"pm.test(\"Response is an array\", () => {\r",
+							"    pm.expect(json).to.be.an(\"array\");\r",
+							"});\r",
+							"\r",
+							"pm.test(\"All pets have status 'available'\", () => {\r",
+							"    json.forEach(pet => {\r",
+							"        pm.expect(pet).to.have.property(\"status\");\r",
+							"        pm.expect(pet.status).to.eql(\"available\");\r",
+							"    });\r",
+							"});\r",
+							"\r",
+							"pm.test(\"All pets have id and name\", () => {\r",
+							"    json.forEach(pet => {\r",
+							"        pm.expect(pet).to.have.property(\"id\");\r",
+							"        pm.expect(pet).to.have.property(\"name\");\r",
+							"        pm.expect(pet.name).to.be.a(\"string\").and.not.be.empty;\r",
+							"    });\r",
+							"});\r",
+							"\r",
+							"pm.execution.setNextRequest(\"Create Pet - Negative\");\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/pet/findByStatus?status=available",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"pet",
+						"findByStatus"
+					],
+					"query": [
+						{
+							"key": "status",
+							"value": "available"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Created Pet",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let petId = pm.environment.get(\"petId\");\r",
+							"\r",
+							"pm.sendRequest({\r",
+							"    url: `https://petstore.swagger.io/v2/pet/${petId}`,\r",
+							"    method: 'GET'\r",
+							"}, function (err, res) {\r",
+							"    let json = res.json();\r",
+							"\r",
+							"    pm.test(\"Status code is 200\", () => pm.expect(res).to.have.status(200));\r",
+							"    pm.test(\"Returned petId is same\", () => pm.expect(json.id).to.eql(+petId));\r",
+							"    pm.test(\"Name is correct\", () => pm.expect(json.name).to.eql(\"Luna\"));\r",
+							"    pm.test(\"Status is available\", () => pm.expect(json.status).to.eql(\"available\"));\r",
+							"});\r",
+							"\r",
+							"pm.execution.setNextRequest(\"Get Pet by Status\");\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/pet/{{petId}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"pet",
+						"{{petId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Pet by ID",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let json = pm.response.json();\r",
+							"\r",
+							"const expectedPetId = 54321;\r",
+							"\r",
+							"pm.test(\"Response contains pet id\", () => {\r",
+							"    pm.expect(json).to.have.property(\"id\");\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));\r",
+							"\r",
+							"pm.test(\"Returned petId matches expected\", () => {\r",
+							"    pm.expect(json.id).to.eql(expectedPetId);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Name exists and not empty\", () => {\r",
+							"    pm.expect(json).to.have.property(\"name\");\r",
+							"    pm.expect(json.name).to.be.a(\"string\").and.not.be.empty;\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Status exists and is string\", () => {\r",
+							"    pm.expect(json).to.have.property(\"status\");\r",
+							"    pm.expect(json.status).to.be.a(\"string\");\r",
+							"});\r",
+							"\r",
+							"pm.execution.setNextRequest(\"Edit Created Pet\");\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/pet/54321",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"pet",
+						"54321"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Edited Pet",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let petId = pm.environment.get(\"petId\");\r",
+							"\r",
+							"pm.sendRequest({\r",
+							"    url: `https://petstore.swagger.io/v2/pet/${petId}`,\r",
+							"    method: 'GET'\r",
+							"}, function (err, res) {\r",
+							"    let json = res.json();\r",
+							"\r",
+							"    pm.test(\"Status code is 200\", () => pm.expect(res).to.have.status(200));\r",
+							"    pm.test(\"Returned petId is same\", () => pm.expect(json.id).to.eql(+petId));\r",
+							"    pm.test(\"Name is correct\", () => pm.expect(json.name).to.eql(\"Luna\"));\r",
+							"    pm.test(\"Status is available\", () => pm.expect(json.status).to.eql(\"available\"));\r",
+							"});\r",
+							"\r",
+							"pm.execution.setNextRequest(\"Deleted Created Pet\");\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/pet/{{petId}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"pet",
+						"{{petId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Pet - Negative",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let json = pm.response.json();\r",
+							"\r",
+							"pm.test(\"Status code is 404 for non-existing pet\", () => {\r",
+							"    pm.response.to.have.status(404);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response contains error message\", () => {\r",
+							"    pm.expect(json).to.have.property(\"message\");\r",
+							"    pm.expect(json.message.toLowerCase()).to.include(\"not found\");\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Error code exists\", () => {\r",
+							"    pm.expect(json).to.have.property(\"code\");\r",
+							"    pm.expect(json.code).to.be.a(\"number\");\r",
+							"});\r",
+							"\r",
+							"pm.execution.setNextRequest(\"Create Pet - Status Check\");\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/pet/9999999999999",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"pet",
+						"9999999999999"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Pet - Status Check",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let json = pm.response.json();\r",
+							"pm.test(\"Status code 200\", () => pm.response.to.have.status(200));\r",
+							"pm.test(\"Pet name is Buddy\", () => pm.expect(json.name).to.eql(\"Buddy\"));\r",
+							"pm.test(\"Pet status is sold\", () => pm.expect(json.status).to.eql(\"sold\"));\r",
+							"\r",
+							"let petId = (json.id < 9000000000000000000) ? json.id : Math.floor(Math.random() * 1000000) + 1;\r",
+							"pm.environment.set(\"petId\", petId);\r",
+							"\r",
+							"pm.execution.setNextRequest(\"Get Pet by ID\");\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"id\": 54321,\r\n  \"name\": \"Buddy\",\r\n  \"status\": \"sold\"\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/pet",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"pet"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Edit Created Pet",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let json = pm.response.json();\r",
+							"\r",
+							"pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));\r",
+							"\r",
+							"pm.test(\"Updated petId matches\", () => {\r",
+							"    const petId = Number(pm.environment.get(\"petId\"));\r",
+							"    pm.expect(json.id).to.eql(petId);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Pet name is updated\", () => {\r",
+							"    pm.expect(json.name).to.eql(\"UpdatedPetName\");\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Pet status is updated\", () => {\r",
+							"    pm.expect(json.status).to.eql(\"sold\");\r",
+							"});\r",
+							"\r",
+							"pm.execution.setNextRequest(\"Get Edited Pet\");\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"id\": {{petId}}, \r\n  \"name\": \"UpdatedPetName\",\r\n  \"status\": \"sold\",\r\n  \"photoUrls\": [],\r\n  \"tags\": []\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/pet",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"pet"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Deleted Created Pet",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let json = pm.response.json();\r",
+							"\r",
+							"pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));\r",
+							"\r",
+							"pm.test(\"Deleted petId matches\", () => {\r",
+							"    const petId = Number(pm.environment.get(\"petId\"));\r",
+							"    pm.expect(json.message).to.eql(petId.toString());\r",
+							"});\r",
+							"\r",
+							"pm.sendRequest({\r",
+							"    url: `{{baseUrl}}/pet/${pm.environment.get(\"petId\")}`,\r",
+							"    method: 'GET'\r",
+							"}, function(err, res) {\r",
+							"    pm.test(\"GET deleted pet should return 404\", () => {\r",
+							"        pm.expect(res).to.have.status(404);\r",
+							"    });\r",
+							"});\r",
+							"\r",
+							"pm.execution.setNextRequest(\"null\");\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/pet/{{petId}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"pet",
+						"{{petId}}"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
